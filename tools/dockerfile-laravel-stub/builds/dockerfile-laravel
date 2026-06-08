@@ -1,0 +1,82 @@
+#!/usr/bin/env php
+<?php
+
+$args = $argv;
+array_shift($args);
+$command = $args[0] ?? null;
+
+if ($command !== 'generate') {
+    fwrite(STDERR, "Unsupported command. Only 'generate' is available.\n");
+    exit(1);
+}
+
+$dockerfile = getcwd().DIRECTORY_SEPARATOR.'Dockerfile';
+
+if (! file_exists($dockerfile)) {
+    $contents = <<<'DOCKERFILE'
+FROM composer:2 AS vendor
+
+WORKDIR /app
+
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --prefer-dist \
+    --no-interaction \
+    --no-progress \
+    --no-scripts \
+    --optimize-autoloader
+
+
+FROM node:20-alpine AS frontend
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY resources ./resources
+COPY public ./public
+COPY vite.config.js babel.config.js ./
+RUN npm run build
+
+
+FROM php:8.2-apache AS app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libfreetype6-dev \
+        libjpeg62-turbo-dev \
+        libpng-dev \
+        libzip-dev \
+        unzip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql gd bcmath exif zip \
+    && a2enmod rewrite headers expires \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /var/www/html
+
+COPY . .
+COPY --from=vendor /app/vendor ./vendor
+COPY --from=frontend /app/public/build ./public/build
+COPY docker/apache-site.conf /etc/apache2/sites-available/000-default.conf
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint
+
+RUN chmod +x /usr/local/bin/entrypoint \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R ug+rwx storage bootstrap/cache
+
+EXPOSE 8080
+
+ENTRYPOINT ["/usr/local/bin/entrypoint"]
+CMD ["apache2-foreground"]
+DOCKERFILE;
+
+    file_put_contents($dockerfile, $contents);
+    fwrite(STDOUT, "Generated project Dockerfile.\n");
+    exit(0);
+}
+
+fwrite(STDOUT, "Using existing project Dockerfile.\n");
+exit(0);

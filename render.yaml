@@ -1,0 +1,9 @@
+services:
+  - type: web_service
+    name: worldbeach-backend
+    env: docker
+    branch: main
+    dockerfilePath: Dockerfile
+    plan: free
+    buildCommand: ""
+    startCommand: ""

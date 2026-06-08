@@ -1,0 +1,13 @@
+{
+    "name": "fly-apps/dockerfile-laravel",
+    "description": "Local stub used to satisfy Andasy setup without installing the incompatible upstream generator.",
+    "version": "1.0.9",
+    "type": "library",
+    "bin": [
+        "builds/dockerfile-laravel"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.1"
+    }
+}
