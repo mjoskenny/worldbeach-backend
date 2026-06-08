@@ -6,7 +6,6 @@ services:
     dockerfilePath: Dockerfile
     plan: free
     healthCheckPath: /
-    preDeployCommand: php artisan migrate --force
     envVars:
       - key: APP_NAME
         value: World Beach
@@ -24,6 +23,8 @@ services:
         value: stack
       - key: LOG_LEVEL
         value: error
+      - key: RUN_MIGRATIONS
+        value: "true"
       - key: DB_CONNECTION
         value: pgsql
       - key: DATABASE_URL

@@ -16,4 +16,8 @@ if [ ! -L /var/www/html/public/storage ]; then
     php artisan storage:link --no-interaction || true
 fi
 
+if [ "$RUN_MIGRATIONS" = "true" ]; then
+    php artisan migrate --force
+fi
+
 exec "$@"
