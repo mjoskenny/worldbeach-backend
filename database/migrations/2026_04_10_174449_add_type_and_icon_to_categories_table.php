@@ -11,9 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (! Schema::hasTable('categories')) {
+            return;
+        }
+
         Schema::table('categories', function (Blueprint $table) {
-            $table->enum('type', ['menu', 'event', 'space'])->default('menu')->after('name');
-            $table->string('icon')->nullable()->after('type');
+            if (! Schema::hasColumn('categories', 'type')) {
+                $table->enum('type', ['menu', 'event', 'space'])->default('menu')->after('name');
+            }
+
+            if (! Schema::hasColumn('categories', 'icon')) {
+                $table->string('icon')->nullable()->after('type');
+            }
         });
     }
 
@@ -22,8 +31,18 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (! Schema::hasTable('categories')) {
+            return;
+        }
+
         Schema::table('categories', function (Blueprint $table) {
-            $table->dropColumn(['type', 'icon']);
+            if (Schema::hasColumn('categories', 'type')) {
+                $table->dropColumn('type');
+            }
+
+            if (Schema::hasColumn('categories', 'icon')) {
+                $table->dropColumn('icon');
+            }
         });
     }
 };

@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (! Schema::hasTable('menu_items') || Schema::hasColumn('menu_items', 'featured')) {
+            return;
+        }
+
         Schema::table('menu_items', function (Blueprint $table) {
             $table->boolean('featured')->default(false)->after('image');
         });
@@ -21,6 +25,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (! Schema::hasTable('menu_items') || ! Schema::hasColumn('menu_items', 'featured')) {
+            return;
+        }
+
         Schema::table('menu_items', function (Blueprint $table) {
             $table->dropColumn('featured');
         });
