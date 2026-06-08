@@ -17,7 +17,16 @@ if [ ! -L /var/www/html/public/storage ]; then
 fi
 
 if [ "$RUN_MIGRATIONS" = "true" ]; then
-    php artisan migrate --force
+    attempts=0
+    until php artisan migrate --force; do
+        attempts=$((attempts + 1))
+
+        if [ "$attempts" -ge 5 ]; then
+            exit 1
+        fi
+
+        sleep 5
+    done
 fi
 
 exec "$@"
