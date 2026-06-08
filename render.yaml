@@ -1,9 +1,52 @@
 services:
-  - type: web_service
+  - type: web
     name: worldbeach-backend
-    env: docker
+    runtime: docker
     branch: main
     dockerfilePath: Dockerfile
     plan: free
-    buildCommand: ""
-    startCommand: ""
+    healthCheckPath: /
+    preDeployCommand: php artisan migrate --force
+    envVars:
+      - key: APP_NAME
+        value: World Beach
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        sync: false
+      - key: APP_URL
+        value: https://worldbeach-backend.onrender.com
+      - key: ASSET_URL
+        value: https://worldbeach-backend.onrender.com
+      - key: LOG_CHANNEL
+        value: stack
+      - key: LOG_LEVEL
+        value: error
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DATABASE_URL
+        fromDatabase:
+          name: worldbeach-db
+          property: connectionString
+      - key: CACHE_DRIVER
+        value: file
+      - key: FILESYSTEM_DISK
+        value: public
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: SESSION_DRIVER
+        value: file
+      - key: SESSION_SECURE_COOKIE
+        value: "true"
+      - key: SANCTUM_STATEFUL_DOMAINS
+        value: worldbeach-backend.onrender.com
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://worldbeach-backend.onrender.com
+      - key: CORS_SUPPORTS_CREDENTIALS
+        value: "true"
+
+databases:
+  - name: worldbeach-db
+    plan: free
