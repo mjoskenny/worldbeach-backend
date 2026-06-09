@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Space;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
+use App\Support\UploadStorage;
 
 class SpaceController extends Controller
 {
@@ -45,7 +45,7 @@ class SpaceController extends Controller
 
         // Store image
         $filename = Str::random(20) . '.' . $request->file('image')->getClientOriginalExtension();
-        $request->file('image')->storeAs('public/spaces', $filename);
+        $imageUrl = UploadStorage::storeAs($request->file('image'), 'spaces', $filename);
 
         $space = Space::create([
             'title' => $validated['title'],
@@ -55,7 +55,7 @@ class SpaceController extends Controller
             'size' => $validated['size'] ?? null,
             'price_per_hour' => $validated['price_per_hour'],
             'features' => $validated['features'] ?? [],
-            'image' => '/storage/spaces/' . $filename, // SINGLE STRING
+            'image' => $imageUrl, // SINGLE STRING
         ]);
 
         return response()->json($space, 201);
@@ -88,13 +88,11 @@ class SpaceController extends Controller
         if ($request->hasFile('image')) {
             // Delete old image
             if ($space->image) {
-                $oldPath = str_replace('/storage/', 'public/', $space->image);
-                Storage::delete($oldPath);
+                UploadStorage::delete($space->getRawOriginal('image'));
             }
 
             $filename = Str::random(20) . '.' . $request->file('image')->getClientOriginalExtension();
-            $request->file('image')->storeAs('public/spaces', $filename);
-            $space->image = '/storage/spaces/' . $filename;
+            $space->image = UploadStorage::storeAs($request->file('image'), 'spaces', $filename);
         }
 
         $space->update([
@@ -118,8 +116,7 @@ class SpaceController extends Controller
         }
 
         if ($space->image) {
-            $path = str_replace('/storage/', 'public/', $space->image);
-            Storage::delete($path);
+            UploadStorage::delete($space->getRawOriginal('image'));
         }
 
         $space->delete();

@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { toast } from 'sonner';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { motion } from 'framer-motion';
+import { appImageUrl } from '../lib/api';
 
 interface MenuItemCardProps {
   item: MenuItem;
@@ -31,11 +32,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({ item }) => {
         <div className="relative h-56 overflow-hidden bg-gray-100">
           <ImageWithFallback
             src={
-              item.image
-                ? item.image.startsWith('http')
-                  ? item.image
-                  : `/storage/${item.image}`
-                : '/placeholder.png'
+              appImageUrl(item.image)
             }
             alt={item.name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"

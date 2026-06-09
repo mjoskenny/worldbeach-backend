@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Save, X, Eye, Check, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import api, { apiGet } from '../../lib/api'; // your axios wrapper
+import api, { apiGet, appImageUrl } from '../../lib/api'; // your axios wrapper
 import { Event } from '../types/events'; // your Event interface
 import axios from 'axios';
 
@@ -262,7 +262,7 @@ export const MenuTab: React.FC<{ menuItems: any[]; setMenuItems: (items: any[]) 
               />
               {/* Preview */}
               {formData.image && typeof formData.image === 'string' && (
-                <img src={`/storage/${formData.image}`} alt="preview" className="w-24 h-24 mt-2 object-cover rounded" />
+                <img src={appImageUrl(formData.image)} alt="preview" className="w-24 h-24 mt-2 object-cover rounded" />
               )}
               {formData.image && formData.image instanceof File && (
                 <img src={URL.createObjectURL(formData.image)} alt="preview" className="w-24 h-24 mt-2 object-cover rounded" />
@@ -311,7 +311,7 @@ export const MenuTab: React.FC<{ menuItems: any[]; setMenuItems: (items: any[]) 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredMenu.map(item => (
             <div key={item.id} className="glass-card rounded-2xl overflow-hidden">
-              <img src={item.image ? `/storage/${item.image}` : '/placeholder.png'} alt={item.name} className="w-full h-48 object-cover" />
+              <img src={appImageUrl(item.image)} alt={item.name} className="w-full h-48 object-cover" />
               <div className="p-4">
                 <h3 className="text-lg mb-2 text-[#042029] dark:text-white">{item.name}</h3>
                 <p className="text-sm text-gray-600 dark:text-white/70 mb-3 line-clamp-2">{item.description}</p>
@@ -518,7 +518,7 @@ export const EventsTab: React.FC<{ events: Event[]; setEvents: (events: Event[])
         src={
           viewingEvent.image instanceof File
             ? URL.createObjectURL(viewingEvent.image) // preview uploaded file
-            : `/storage/${viewingEvent.image}` // preview saved image from storage
+            : appImageUrl(viewingEvent.image) // preview saved image from storage
         }
         alt={viewingEvent.title}
         className="w-full h-64 object-cover rounded-lg"
@@ -808,7 +808,7 @@ export const EventsTab: React.FC<{ events: Event[]; setEvents: (events: Event[])
     event.image instanceof File
       ? URL.createObjectURL(event.image)
       : event.image
-        ? `/storage/${event.image}`
+        ? appImageUrl(event.image)
         : '/placeholder.png'
   } className="w-full h-48 object-cover"
 />

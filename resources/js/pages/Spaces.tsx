@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import { appImageUrl } from '../lib/api';
 
 export const Spaces: React.FC = () => {
   const [spaces, setSpaces] = useState<any[]>([]);
@@ -93,9 +94,7 @@ export const Spaces: React.FC = () => {
                   <ImageWithFallback
   src={
     space.image
-      ? space.image.startsWith('http')
-        ? space.image
-        : `${window.location.origin}${space.image}` // prepends backend URL automatically
+      ? appImageUrl(space.image)
       : '/placeholder.png'
   }
   alt={space.title || 'Untitled'}

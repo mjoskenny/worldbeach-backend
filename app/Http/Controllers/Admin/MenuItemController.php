@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller; // ✅ correct
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\MenuItem;
+use App\Support\UploadStorage;
 
 class MenuItemController extends Controller
 {
@@ -45,7 +46,7 @@ class MenuItemController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('menu_images', 'public');
+            $data['image'] = UploadStorage::store($request->file('image'), 'menu_images');
         }
 
         MenuItem::create($data);
@@ -79,7 +80,8 @@ class MenuItemController extends Controller
         $data = $request->only(['name', 'description', 'price', 'variant_price', 'category_id']);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('menu_images', 'public');
+            UploadStorage::delete($menuItem->getRawOriginal('image'));
+            $data['image'] = UploadStorage::store($request->file('image'), 'menu_images');
         }
 
         $menuItem->update($data);
@@ -92,6 +94,7 @@ class MenuItemController extends Controller
      */
     public function destroy(MenuItem $menuItem)
     {
+        UploadStorage::delete($menuItem->getRawOriginal('image'));
         $menuItem->delete();
         return redirect()->route('admin.menu-items.index')->with('success', 'Menu item deleted successfully!');
     }

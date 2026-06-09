@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\SiteSetting;
+use App\Support\UploadStorage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class SiteSettingController extends Controller
 {
@@ -73,10 +73,10 @@ class SiteSettingController extends Controller
 
         if ($request->hasFile('logo')) {
             if ($setting->logo_path) {
-                Storage::disk('public')->delete($setting->logo_path);
+                UploadStorage::delete($setting->getRawOriginal('logo_path'));
             }
 
-            $validated['logo_path'] = $request->file('logo')->store('site-settings', 'public');
+            $validated['logo_path'] = UploadStorage::store($request->file('logo'), 'site-settings');
         }
 
         $setting->update($validated);

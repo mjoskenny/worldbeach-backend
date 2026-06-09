@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 
 use App\Models\Gallery;
+use App\Support\UploadStorage;
 use Illuminate\Http\Request;
 
 class GalleryController extends Controller
@@ -28,7 +29,7 @@ class GalleryController extends Controller
         'image' => 'required|image',
     ]);
 
-    $path = $request->file('image')->store('gallery', 'public');
+    $path = UploadStorage::store($request->file('image'), 'gallery');
 
     $position = Gallery::where('category', $request->category)->max('position') + 1;
 
@@ -53,8 +54,8 @@ class GalleryController extends Controller
     ]);
 
     if ($request->hasFile('image')) {
-        $path = $request->file('image')->store('gallery', 'public');
-        $gallery->image = $path;
+        UploadStorage::delete($gallery->getRawOriginal('image'));
+        $gallery->image = UploadStorage::store($request->file('image'), 'gallery');
     }
 
     $gallery->category = $request->category;
@@ -70,7 +71,9 @@ class GalleryController extends Controller
 
     public function destroy($id)
     {
-        Gallery::findOrFail($id)->delete();
+        $gallery = Gallery::findOrFail($id);
+        UploadStorage::delete($gallery->getRawOriginal('image'));
+        $gallery->delete();
         return response()->json(['success' => true]);
     }
 }

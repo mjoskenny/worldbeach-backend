@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import { appImageUrl } from '../lib/api';
 
 export const Services: React.FC = () => {
   const [services, setServices] = useState<any[]>([]);
@@ -95,7 +96,7 @@ export const Services: React.FC = () => {
 
               const IconComponent = iconMap[iconKey] ?? Waves;
               const imageUrl = service.image
-                ? service.image.toString()
+                ? appImageUrl(service.image.toString())
                 : 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1600';
               const features: string[] = Array.isArray(service.features) ? service.features : [];
               const title = service.title || service.name || 'Service';

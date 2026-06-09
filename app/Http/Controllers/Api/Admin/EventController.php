@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Event;
+use App\Support\UploadStorage;
 
 class EventController extends Controller
 {
@@ -47,7 +48,7 @@ public function show($id)
 
         // Image upload
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('events', 'public');
+            $validated['image'] = UploadStorage::store($request->file('image'), 'events');
         }
 
         $validated['featured'] = $request->boolean('featured');
@@ -94,7 +95,8 @@ public function show($id)
 
         // Image update
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('events', 'public');
+            UploadStorage::delete($event->getRawOriginal('image'));
+            $validated['image'] = UploadStorage::store($request->file('image'), 'events');
         }
 
         $validated['featured'] = $request->boolean('featured');
@@ -125,7 +127,9 @@ public function show($id)
 
     public function destroy($id)
     {
-        Event::findOrFail($id)->delete();
+        $event = Event::findOrFail($id);
+        UploadStorage::delete($event->getRawOriginal('image'));
+        $event->delete();
 
         return response()->json([
             'message' => 'Event deleted'

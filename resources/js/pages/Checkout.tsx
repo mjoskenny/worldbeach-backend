@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CreditCard, Clock, MapPin, User, Phone, Mail, CheckCircle, Smartphone, Building2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
-import { apiUrl } from '../lib/api';
+import { apiUrl, appImageUrl } from '../lib/api';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 
 export const Checkout: React.FC = () => {
@@ -542,11 +542,7 @@ export const Checkout: React.FC = () => {
                       <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
                         <ImageWithFallback
                           src={
-                            item.image
-                              ? item.image.startsWith('http')
-                                ? item.image
-                                : `/storage/${item.image}`
-                              : '/placeholder.png'
+                            appImageUrl(item.image)
                           }
                           alt={item.name}
                           className="w-full h-full object-cover"

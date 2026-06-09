@@ -97,6 +97,40 @@ export const appAssetUrl = (path: string): string => {
   return `${appBaseUrl}/${normalizedPath}`;
 };
 
+export const appImageUrl = (
+  path?: string | null,
+  fallback = "/placeholder.png"
+): string => {
+  if (!path) {
+    return fallback;
+  }
+
+  const normalizedPath = path.replace(/\\/g, "/").trim();
+
+  if (!normalizedPath) {
+    return fallback;
+  }
+
+  if (
+    normalizedPath.startsWith("http://") ||
+    normalizedPath.startsWith("https://") ||
+    normalizedPath.startsWith("blob:") ||
+    normalizedPath.startsWith("data:")
+  ) {
+    return normalizedPath;
+  }
+
+  if (normalizedPath.startsWith("/storage/") || normalizedPath.startsWith("storage/")) {
+    return appAssetUrl(normalizedPath);
+  }
+
+  if (normalizedPath.startsWith("/")) {
+    return appAssetUrl(normalizedPath);
+  }
+
+  return appAssetUrl(`storage/${normalizedPath}`);
+};
+
 /* =========================
    GET
 ========================= */

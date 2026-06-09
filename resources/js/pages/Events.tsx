@@ -6,6 +6,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { useSiteSettings } from '../context/SiteSettingsContext';
+import { appImageUrl } from '../lib/api';
 
 export const Events: React.FC = () => {
   const { settings } = useSiteSettings();
@@ -111,7 +112,7 @@ export const Events: React.FC = () => {
                     {/* Image */}
                     <div className="relative h-56 overflow-hidden">
                       <ImageWithFallback
-                        src={event.image ? `/storage/${event.image}` : '/placeholder.png'}
+                        src={appImageUrl(event.image)}
                         alt={event.title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />

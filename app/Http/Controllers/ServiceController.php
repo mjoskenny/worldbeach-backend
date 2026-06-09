@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Service;
+use App\Support\UploadStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -33,8 +34,7 @@ class ServiceController extends Controller
 
         // image
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('services', 'public');
-            $data['image'] = '/storage/' . $path;
+            $data['image'] = UploadStorage::store($request->file('image'), 'services');
         }
 
         return Service::create($data);
@@ -61,8 +61,8 @@ class ServiceController extends Controller
         $data['slug'] = Str::slug($data['name']);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('services', 'public');
-            $data['image'] = '/storage/' . $path;
+            UploadStorage::delete($service->getRawOriginal('image'));
+            $data['image'] = UploadStorage::store($request->file('image'), 'services');
         }
 
         $service->update($data);
@@ -72,7 +72,9 @@ class ServiceController extends Controller
 
     public function destroy($id)
     {
-        Service::destroy($id);
+        $service = Service::findOrFail($id);
+        UploadStorage::delete($service->getRawOriginal('image'));
+        $service->delete();
         return response()->json(['success' => true]);
     }
 }

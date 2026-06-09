@@ -4,7 +4,7 @@ import { Calendar, Clock, MapPin, Users, Ticket, ArrowLeft, Minus, Plus, Check }
 import { motion } from "framer-motion";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { toast } from "sonner";
-import { apiGet } from "../lib/api";
+import { apiGet, appImageUrl } from "../lib/api";
 import { Event as EventType, EventVariant } from "../types/events";
 
 interface TicketVariant {
@@ -142,7 +142,7 @@ export const EventDetails: React.FC = () => {
               className="relative h-[500px] rounded-3xl overflow-hidden shadow-2xl"
             >
               <ImageWithFallback
-                src={event.image ? `/storage/${event.image}` : "/placeholder.png"}
+                src={appImageUrl(event.image)}
                 alt={event.title}
                 className="w-full h-full object-cover"
               />

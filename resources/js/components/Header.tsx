@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import logoLight from '../assets/d4a16e8ef77a867b8280234ddb8f940ade2e365a.png';
 import logoDark from '../assets/e4ffdc192823569086515323ccd66b5354680a76.png';
 import { useSiteSettings } from '../context/SiteSettingsContext';
-import { appAssetUrl } from '../lib/api';
+import { appImageUrl } from '../lib/api';
 
 
 export const Header: React.FC = () => {
@@ -48,7 +48,7 @@ export const Header: React.FC = () => {
   // Check if we're on the menu page
   const isMenuPage = location.pathname === '/menu';
   const logoSrc = settings.logo_path
-    ? appAssetUrl(`storage/${settings.logo_path.replace(/^\/+/, '')}`)
+    ? appImageUrl(settings.logo_path)
     : isScrolled
       ? (isDark ? logoDark : logoLight)
       : logoLight;

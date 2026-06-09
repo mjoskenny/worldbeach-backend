@@ -5,6 +5,7 @@ import { QuantityStepper } from './QuantityStepper';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { appImageUrl } from '../lib/api';
 
 export const CartDrawer: React.FC = () => {
   const { cartItems, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart, cartTotal, cartCount } = useCart();
@@ -86,11 +87,7 @@ export const CartDrawer: React.FC = () => {
                       <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                         <ImageWithFallback
                           src={
-                            item.image
-                              ? item.image.startsWith('http')
-                                ? item.image
-                                : `/storage/${item.image}`
-                              : '/placeholder.png'
+                            appImageUrl(item.image)
                           }
                           alt={item.name}
                           className="w-full h-full object-cover"

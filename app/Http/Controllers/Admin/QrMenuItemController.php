@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\QrMenuItem;
 use App\Models\QrCategory;
+use App\Support\UploadStorage;
 use Illuminate\Http\Request;
 
 class QrMenuItemController extends Controller
@@ -32,7 +33,7 @@ class QrMenuItemController extends Controller
             'position' => 'nullable|integer'
         ]);
 
-        $data['image'] = $request->file('image')->store('qr_menu_images', 'public');
+        $data['image'] = UploadStorage::store($request->file('image'), 'qr_menu_images');
 
         QrMenuItem::create($data);
 
@@ -58,7 +59,8 @@ class QrMenuItemController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('qr_menu_images', 'public');
+            UploadStorage::delete($qr_menu_item->getRawOriginal('image'));
+            $data['image'] = UploadStorage::store($request->file('image'), 'qr_menu_images');
         }
 
         $qr_menu_item->update($data);
@@ -69,6 +71,7 @@ class QrMenuItemController extends Controller
 
     public function destroy(QrMenuItem $qr_menu_item)
     {
+        UploadStorage::delete($qr_menu_item->getRawOriginal('image'));
         $qr_menu_item->delete();
         return back()->with('success', 'Deleted');
     }

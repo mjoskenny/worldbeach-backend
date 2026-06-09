@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\MenuItem;
+use App\Support\UploadStorage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class MenuItemController extends Controller
 {
@@ -25,8 +25,7 @@ class MenuItemController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')
-                ->store('menu-items', 'public');
+            $validated['image'] = UploadStorage::store($request->file('image'), 'menu-items');
         }
 
         $menuItem = MenuItem::create(array_merge(['featured' => false], $validated));
@@ -53,11 +52,10 @@ class MenuItemController extends Controller
 
         if ($request->hasFile('image')) {
             if ($item->image) {
-                Storage::disk('public')->delete($item->image);
+                UploadStorage::delete($item->getRawOriginal('image'));
             }
 
-            $validated['image'] = $request->file('image')
-                ->store('menu-items', 'public');
+            $validated['image'] = UploadStorage::store($request->file('image'), 'menu-items');
         }
 
         $item->update($validated);
@@ -73,7 +71,7 @@ class MenuItemController extends Controller
         $item = MenuItem::findOrFail($id);
 
         if ($item->image) {
-            Storage::disk('public')->delete($item->image);
+            UploadStorage::delete($item->getRawOriginal('image'));
         }
 
         $item->delete();

@@ -4,13 +4,13 @@ import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react'
 import { toast } from 'sonner';
 import logoFooter from '../assets/d4a16e8ef77a867b8280234ddb8f940ade2e365a.png';
 import { useSiteSettings } from '../context/SiteSettingsContext';
-import { appAssetUrl } from '../lib/api';
+import { appImageUrl } from '../lib/api';
 
 export const Footer: React.FC = () => {
   const [email, setEmail] = useState('');
   const { settings } = useSiteSettings();
   const footerLogoSrc = settings.logo_path
-    ? appAssetUrl(`storage/${settings.logo_path.replace(/^\/+/, '')}`)
+    ? appImageUrl(settings.logo_path)
     : logoFooter;
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {

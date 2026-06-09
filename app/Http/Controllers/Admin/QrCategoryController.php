@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\QrCategory;
+use App\Support\UploadStorage;
 use Illuminate\Http\Request;
 
 class QrCategoryController extends Controller
@@ -28,7 +29,7 @@ class QrCategoryController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('qr_menu_images', 'public');
+            $data['image'] = UploadStorage::store($request->file('image'), 'qr_menu_images');
         }
 
         QrCategory::create($data);
@@ -51,7 +52,8 @@ class QrCategoryController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('qr_menu_images', 'public');
+            UploadStorage::delete($qr_category->getRawOriginal('image'));
+            $data['image'] = UploadStorage::store($request->file('image'), 'qr_menu_images');
         }
 
         $qr_category->update($data);
@@ -62,6 +64,7 @@ class QrCategoryController extends Controller
 
     public function destroy(QrCategory $qr_category)
     {
+        UploadStorage::delete($qr_category->getRawOriginal('image'));
         $qr_category->delete();
         return back()->with('success', 'Deleted');
     }
