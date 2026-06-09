@@ -930,6 +930,8 @@ const CATEGORIES = [
   "host_event",
 ];
 
+const QR_CAROUSEL_CATEGORIES = ["qr_menu_carousel", "carousel"];
+
 export const  GalleryTab: React.FC<{
   images: any[];
   setImages: (images: any[]) => void;
@@ -948,8 +950,8 @@ export const  GalleryTab: React.FC<{
     return appImageUrl(imagePath);
   };
 
-  const qrCarouselImages = images.filter((image) => image.category === "qr_menu_carousel");
-  const regularGalleryImages = images.filter((image) => image.category !== "qr_menu_carousel");
+  const qrCarouselImages = images.filter((image) => QR_CAROUSEL_CATEGORIES.includes(image.category));
+  const regularGalleryImages = images.filter((image) => !QR_CAROUSEL_CATEGORIES.includes(image.category));
 
   /* ----------------------------
      ADD NEW IMAGE

@@ -47,7 +47,7 @@ Route::get('/qr-menu', function (Request $request) {
         ->orderBy('position')
         ->get();
 
-    $qrCarouselCategories = ['qr_menu_carousel', 'qr menu carousel', 'QR Menu Carousel'];
+    $qrCarouselCategories = ['qr_menu_carousel', 'qr menu carousel', 'QR Menu Carousel', 'carousel'];
 
     $heroCarouselImages = Gallery::query()
         ->whereIn('category', $qrCarouselCategories)

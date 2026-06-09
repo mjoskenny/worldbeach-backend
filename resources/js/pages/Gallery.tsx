@@ -16,11 +16,12 @@ interface GalleryImage {
 export const Gallery: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const qrCarouselCategories = ['qr_menu_carousel', 'carousel'];
 
   useEffect(() => {
     apiGet<GalleryImage[]>('/gallery-data')
       .then((data) =>
-        setGalleryImages(data.filter((image) => image.category !== 'qr_menu_carousel'))
+        setGalleryImages(data.filter((image) => !qrCarouselCategories.includes(image.category)))
       )
       .catch((err) => console.error('Failed to fetch gallery images', err));
   }, []);
