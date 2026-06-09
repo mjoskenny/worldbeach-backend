@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Calendar, FileText } from 'lucide-react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
-import { apiGet } from '../lib/api';
+import { apiGet, appImageUrl } from '../lib/api';
 
 interface GalleryImage {
   id: number;
@@ -19,18 +19,11 @@ export const Gallery: React.FC = () => {
 
   useEffect(() => {
     apiGet<GalleryImage[]>('/gallery-data')
-      .then((data) => setGalleryImages(data))
+      .then((data) =>
+        setGalleryImages(data.filter((image) => image.category !== 'qr_menu_carousel'))
+      )
       .catch((err) => console.error('Failed to fetch gallery images', err));
   }, []);
-
-  const getImageSrc = (imagePath?: string) => {
-    if (!imagePath) return '/placeholder.png';
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-      return imagePath;
-    }
-
-    return `/storage/${imagePath.replace(/^\/+/, '')}`;
-  };
 
   const handlePrevious = () => {
     if (selectedImage !== null) {
@@ -77,7 +70,7 @@ export const Gallery: React.FC = () => {
                 className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer"
               >
                 <ImageWithFallback
-                  src={getImageSrc(image.image)}
+                  src={appImageUrl(image.image)}
                   alt={image.title || 'Gallery image'}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
@@ -138,7 +131,7 @@ export const Gallery: React.FC = () => {
                 className="max-w-5xl w-full"
               >
                 <ImageWithFallback
-                  src={getImageSrc(galleryImages[selectedImage].image)}
+                  src={appImageUrl(galleryImages[selectedImage].image)}
                   alt={galleryImages[selectedImage].title || 'Gallery image'}
                   className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
                 />

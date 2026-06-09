@@ -387,6 +387,32 @@
 </head>
 
 <body class="antialiased text-slate-900 leading-relaxed">
+@php
+  $normalizeQrAsset = function ($path, $fallback = null) {
+      $path = trim((string) ($path ?: $fallback));
+
+      if ($path === '') {
+          return '';
+      }
+
+      if (\Illuminate\Support\Str::startsWith($path, ['http://', 'https://', 'data:', 'blob:'])) {
+          return $path;
+      }
+
+      if (\Illuminate\Support\Str::startsWith($path, ['/storage/', 'storage/', '/build/', 'build/'])) {
+          return asset(ltrim($path, '/'));
+      }
+
+      if (\Illuminate\Support\Str::startsWith($path, '/')) {
+          return asset(ltrim($path, '/'));
+      }
+
+      return asset('storage/' . ltrim($path, '/'));
+  };
+
+  $qrLogoLight = $normalizeQrAsset($qrLogoLight ?? null, asset('storage/menu_images/logo (2).png'));
+  $qrLogoDark = $normalizeQrAsset($qrLogoDark ?? null, asset('storage/menu_images/logo.png'));
+@endphp
 
   <!-- fixed background -->
   <div class="bg-beach" aria-hidden="true"></div>
@@ -399,7 +425,7 @@
       <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
         <!-- Logo and name -->
         <div class="flex items-center gap-3">
-          <img id="siteLogo" src="{{ asset('storage/menu_images/logo (2).png') }}" alt="Logo" class="w-14 h-14">
+          <img id="siteLogo" src="{{ $qrLogoLight }}" alt="World Beach logo" class="w-14 h-14 object-contain">
           
         </div>
 
@@ -453,6 +479,24 @@
     @endif
 
 
+@php
+  $defaultHeroCarouselImages = [
+      asset('storage/menu_images/download (8).jpeg'),
+      asset('storage/menu_images/download (12).jpeg'),
+      asset('storage/menu_images/images (1).jpeg'),
+  ];
+
+  $heroCarouselImages = collect($heroCarouselImages ?? [])
+      ->filter()
+      ->map(fn ($image) => $normalizeQrAsset($image))
+      ->values()
+      ->all();
+
+  if (empty($heroCarouselImages)) {
+      $heroCarouselImages = $defaultHeroCarouselImages;
+  }
+@endphp
+
      <!-- hero section with slider -->
 <section class="max-w-6xl mx-auto px-4 mb-6">
   <div class="card-glass rounded-2xl p-6 md:p-8 grid md:grid-cols-2 gap-6 items-center">
@@ -461,9 +505,9 @@
     <div class="relative">
       <div class="overflow-hidden rounded-lg shadow-md h-60 md:h-72">
         <div class="slider flex transition-transform duration-500">
-          <img src="{{ asset('storage/menu_images/download (8).jpeg') }}" alt="Dish 1" class="w-full flex-shrink-0 object-cover">
-          <img src="{{ asset('storage/menu_images/download (12).jpeg') }}" alt="Dish 2" class="w-full flex-shrink-0 object-cover">
-          <img src="{{ asset('storage/menu_images/images (1).jpeg') }}" alt="Dish 3" class="w-full flex-shrink-0 object-cover">
+          @foreach($heroCarouselImages as $index => $image)
+            <img src="{{ $image }}" alt="World Beach carousel image {{ $index + 1 }}" class="w-full flex-shrink-0 object-cover">
+          @endforeach
         </div>
       </div>
 
@@ -801,26 +845,28 @@ document.addEventListener('keydown', (event) => {
 document.addEventListener('DOMContentLoaded', () => {
 
   // Slide data
-  const slidesData = [
+  const heroCarouselImages = @json($heroCarouselImages);
+  const slideCopy = [
     {
       title: "Beachside Delight — A Taste of World Beach",
       desc: "Freshly prepared with rich flavors and quality ingredients, made to give you a delicious and satisfying dining experience by the beach.",
-      time: "Available until 22:00",
-      img: "{{ asset('storage/menu_images/download (8).jpeg') }}"
+      time: "Available until 22:00"
     },
     {
       title: "Chef’s Pick — Made with Care",
       desc: "A flavorful dish crafted with attention to detail, bringing together freshness, taste, and the perfect touch for every bite.",
-      time: "Available until 21:30",
-      img: "{{ asset('storage/menu_images/download (12).jpeg') }}"
+      time: "Available until 21:30"
     },
     {
       title: "World Beach Favorite — Fresh & Delicious",
       desc: "Prepared daily with care and served in a relaxing beachside atmosphere, perfect for enjoying good food and great moments.",
-      time: "Available until 20:00",
-      img: "{{ asset('storage/menu_images/images (1).jpeg') }}"
+      time: "Available until 20:00"
     }
   ];
+  const slidesData = heroCarouselImages.map((img, index) => ({
+    ...slideCopy[index % slideCopy.length],
+    img
+  }));
 
 
   const slider = document.querySelector('.slider');
@@ -923,6 +969,8 @@ document.addEventListener("DOMContentLoaded", type);
   const themeToggle = document.getElementById('themeToggle');
   const sunIcon = document.getElementById('sunIcon');
   const moonIcon = document.getElementById('moonIcon');
+  const qrLogoLight = @json($qrLogoLight);
+  const qrLogoDark = @json($qrLogoDark);
 
   function setTheme(isDark) {
   const logo = document.getElementById('siteLogo');
@@ -933,14 +981,14 @@ document.addEventListener("DOMContentLoaded", type);
     sunIcon?.classList.remove('hidden');
     moonIcon?.classList.add('hidden');
 
-    if (logo) logo.src = "{{ asset('storage/menu_images/logo.png') }}"; // bright logo for dark mode
+    if (logo) logo.src = qrLogoDark;
   } else {
     document.documentElement.classList.remove('dark');
     localStorage.setItem('theme', 'light');
     moonIcon?.classList.remove('hidden');
     sunIcon?.classList.add('hidden');
 
-    if (logo) logo.src = "{{ asset('storage/menu_images/logo (2).png') }}"; // normal logo for light mode
+    if (logo) logo.src = qrLogoLight;
   }
 }
 

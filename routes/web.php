@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\QrCategoryController;
 use App\Http\Controllers\Admin\QrMenuItemController;
 use App\Models\Table;
+use App\Models\Gallery;
+use App\Models\SiteSetting;
 use App\Http\Controllers\Admin\TableController;
 
 /*
@@ -45,7 +47,33 @@ Route::get('/qr-menu', function (Request $request) {
         ->orderBy('position')
         ->get();
 
-    return view('menu', compact('categories'));
+    $qrCarouselCategories = ['qr_menu_carousel', 'qr menu carousel', 'QR Menu Carousel'];
+
+    $heroCarouselImages = Gallery::query()
+        ->whereIn('category', $qrCarouselCategories)
+        ->whereNotNull('image')
+        ->orderBy('position')
+        ->orderByDesc('created_at')
+        ->limit(6)
+        ->pluck('image');
+
+    if ($heroCarouselImages->isEmpty()) {
+        $heroCarouselImages = Gallery::query()
+            ->whereNotNull('image')
+            ->whereNotIn('category', $qrCarouselCategories)
+            ->orderBy('position')
+            ->orderByDesc('created_at')
+            ->limit(6)
+            ->pluck('image');
+    }
+
+    $heroCarouselImages = $heroCarouselImages->all();
+
+    $siteLogo = SiteSetting::query()->value('logo_path');
+    $qrLogoLight = $siteLogo ?: \Illuminate\Support\Facades\Vite::asset('resources/js/assets/d4a16e8ef77a867b8280234ddb8f940ade2e365a.png');
+    $qrLogoDark = $siteLogo ?: \Illuminate\Support\Facades\Vite::asset('resources/js/assets/e4ffdc192823569086515323ccd66b5354680a76.png');
+
+    return view('menu', compact('categories', 'heroCarouselImages', 'qrLogoLight', 'qrLogoDark'));
 });
 
 
@@ -128,4 +156,3 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 require __DIR__ . '/auth.php';
 
 Route::view('/{any}', 'app')->where('any', '.*');
-

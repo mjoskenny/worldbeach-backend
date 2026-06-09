@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Space, SpaceImage } from "../types/spaces";
-import { apiGet, apiPost, apiPut, apiDelete } from "../../lib/api";
+import { apiGet, apiPost, apiPut, apiDelete, appImageUrl } from "../../lib/api";
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
@@ -280,7 +280,7 @@ export const SpacesTab: React.FC = () => {
               />
               {(formData.image?.preview || formData.image?.url) && (
                 <img
-                  src={formData.image.preview || formData.image.url}
+                  src={formData.image.preview || appImageUrl(formData.image.url)}
                   className="w-32 h-32 object-cover rounded-lg mt-2 border"
                 />
               )}
@@ -342,7 +342,7 @@ export const SpacesTab: React.FC = () => {
         <div className="grid md:grid-cols-2 gap-6">
           {spaces.map(space => (
             <div key={space.id} className="glass-card rounded-2xl overflow-hidden">
-              <img src={space.image?.url} alt={space.name} className="w-full h-48 object-cover" />
+              <img src={appImageUrl(space.image?.url)} alt={space.name} className="w-full h-48 object-cover" />
               <div className="p-4">
                 <h3 className="text-lg text-[#042029] dark:text-white mb-2">{space.name}</h3>
                 <p className="text-sm text-gray-600 dark:text-white/70 mb-3 line-clamp-2">{space.description}</p>
@@ -925,6 +925,7 @@ const CATEGORIES = [
   "about",
   "gallery",
   "carousel",
+  "qr_menu_carousel",
   "upcoming_event",
   "host_event",
 ];
@@ -944,13 +945,11 @@ export const  GalleryTab: React.FC<{
   });
 
   const getGalleryImageSrc = (imagePath?: string) => {
-    if (!imagePath) return "/placeholder.png";
-    if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
-      return imagePath;
-    }
-
-    return `/storage/${imagePath.replace(/^\/+/, "")}`;
+    return appImageUrl(imagePath);
   };
+
+  const qrCarouselImages = images.filter((image) => image.category === "qr_menu_carousel");
+  const regularGalleryImages = images.filter((image) => image.category !== "qr_menu_carousel");
 
   /* ----------------------------
      ADD NEW IMAGE
@@ -964,6 +963,18 @@ export const  GalleryTab: React.FC<{
       date: new Date().toISOString().split("T")[0],
       description: "",
       category: "gallery",
+    });
+  };
+
+  const handleAddQrCarousel = () => {
+    setIsEditing(true);
+    setCurrentImage(null);
+    setFile(null);
+    setFormData({
+      title: "",
+      date: new Date().toISOString().split("T")[0],
+      description: "",
+      category: "qr_menu_carousel",
     });
   };
 
@@ -1042,18 +1053,73 @@ export const  GalleryTab: React.FC<{
   return (
     <div className="space-y-6">
       {/* ===== HEADER ===== */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <h2 className="text-2xl text-[#042029] dark:text-white">Gallery Management</h2>
         {!isEditing && (
-          <button
-            onClick={handleAdd}
-            className="flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-[#00B4D8] to-[#0077B6] text-white hover:opacity-90 transition-all shadow-lg"
-          >
-            <Plus className="w-5 h-5" />
-            Add Image
-          </button>
+          <div className="flex flex-wrap justify-end gap-3">
+            <button
+              onClick={handleAddQrCarousel}
+              className="flex items-center gap-2 px-6 py-3 rounded-lg border-2 border-[#00B4D8] text-[#0077B6] dark:text-[#00B4D8] hover:bg-[#00B4D8]/10 transition-all"
+            >
+              <Plus className="w-5 h-5" />
+              Add QR Carousel Image
+            </button>
+            <button
+              onClick={handleAdd}
+              className="flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-[#00B4D8] to-[#0077B6] text-white hover:opacity-90 transition-all shadow-lg"
+            >
+              <Plus className="w-5 h-5" />
+              Add Image
+            </button>
+          </div>
         )}
       </div>
+
+      {!isEditing && (
+        <div className="glass-card rounded-2xl p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h3 className="text-lg text-[#042029] dark:text-white">QR Menu Carousel</h3>
+              <p className="text-sm text-gray-600 dark:text-white/60">
+                Upload images here to show them in the hero carousel on the QR menu page.
+              </p>
+            </div>
+            <button
+              onClick={handleAddQrCarousel}
+              className="flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-gradient-to-r from-[#00B4D8] to-[#0077B6] text-white hover:opacity-90 transition-all shadow-lg"
+            >
+              <Plus className="w-5 h-5" />
+              Upload QR Carousel Image
+            </button>
+          </div>
+
+          {qrCarouselImages.length > 0 ? (
+            <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {qrCarouselImages.map((image) => (
+                <button
+                  key={image.id}
+                  type="button"
+                  onClick={() => handleEdit(image)}
+                  className="group relative aspect-video overflow-hidden rounded-lg bg-gray-100 dark:bg-white/5"
+                >
+                  <img
+                    src={getGalleryImageSrc(image.image)}
+                    alt={image.title || "QR menu carousel image"}
+                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                  />
+                  <span className="absolute inset-x-0 bottom-0 bg-black/60 px-2 py-1 text-left text-xs text-white">
+                    {image.title || "QR Carousel"}
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500 dark:border-white/20 dark:text-white/50">
+              No QR carousel images yet.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* ===== FORM ===== */}
       {isEditing ? (
@@ -1078,7 +1144,7 @@ export const  GalleryTab: React.FC<{
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>
-                  {cat.replace("_", " ").toUpperCase()}
+                  {cat.replace(/_/g, " ").toUpperCase()}
                 </option>
               ))}
             </select>
@@ -1158,13 +1224,16 @@ export const  GalleryTab: React.FC<{
         <>
           {/* ===== IMAGE GRID ===== */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {images.map((image) => (
+            {regularGalleryImages.map((image) => (
               <div key={image.id} className="glass-card rounded-lg overflow-hidden group relative">
                 <img
                   src={getGalleryImageSrc(image.image)}
                   alt={image.title}
                   className="w-full h-48 object-cover"
                 />
+                <div className="absolute top-2 left-2 rounded-full bg-black/60 px-3 py-1 text-xs uppercase tracking-wide text-white">
+                  {image.category?.replace(/_/g, " ")}
+                </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#042029]/90 via-[#042029]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="absolute bottom-0 left-0 right-0 p-3">
                     <p className="text-white text-sm mb-1">{image.title}</p>
@@ -1197,7 +1266,7 @@ export const  GalleryTab: React.FC<{
             ))}
           </div>
 
-          {images.length === 0 && (
+          {regularGalleryImages.length === 0 && (
             <div className="glass-card rounded-2xl p-12 text-center">
               <p className="text-gray-500 dark:text-white/50">No images in gallery yet</p>
             </div>
@@ -1277,7 +1346,7 @@ export const SettingsTab: React.FC = () => {
                 src={
                   logoFile
                     ? URL.createObjectURL(logoFile)
-                    : `/storage/${formData.logo_path.replace(/^\/+/, '')}`
+                    : appImageUrl(formData.logo_path)
                 }
                 alt="Site logo preview"
                 className="mt-3 h-16 w-auto rounded-lg bg-white p-2"
