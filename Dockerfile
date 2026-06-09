@@ -52,7 +52,7 @@ RUN chmod +x /usr/local/bin/entrypoint \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R ug+rwx storage bootstrap/cache
 
-EXPOSE 8080
+EXPOSE 80
 
 ENTRYPOINT ["/usr/local/bin/entrypoint"]
 CMD ["apache2-foreground"]
