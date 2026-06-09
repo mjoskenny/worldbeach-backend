@@ -6,7 +6,7 @@
     <title>Admin - @yield('title')</title>
 
     <!-- Vite CSS & JS -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite('resources/css/app.css')
 
     <!-- Feather Icons (optional) -->
     <script src="https://unpkg.com/feather-icons"></script>
