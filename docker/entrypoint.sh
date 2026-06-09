@@ -29,4 +29,8 @@ if [ "$RUN_MIGRATIONS" = "true" ]; then
     done
 fi
 
+if [ "$RUN_ADMIN_SEEDER" = "true" ]; then
+    php artisan db:seed --class=AdminSeeder --force
+fi
+
 exec "$@"

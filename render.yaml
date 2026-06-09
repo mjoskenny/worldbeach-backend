@@ -25,6 +25,14 @@ services:
         value: error
       - key: RUN_MIGRATIONS
         value: "true"
+      - key: RUN_ADMIN_SEEDER
+        value: "true"
+      - key: ADMIN_NAME
+        value: Admin
+      - key: ADMIN_EMAIL
+        value: admin@worldbeach.com
+      - key: ADMIN_PASSWORD
+        sync: false
       - key: DB_CONNECTION
         value: pgsql
       - key: DATABASE_URL
