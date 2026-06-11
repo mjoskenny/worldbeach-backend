@@ -6,7 +6,7 @@
 
     <div class="bg-white p-6 rounded shadow-md">
         @if($menuItem->image)
-            <img src="{{ asset('storage/' . $menuItem->image) }}" alt="" class="h-32 w-32 object-cover rounded mb-4">
+            <img src="{{ $menuItem->display_image_url ?? $menuItem->image }}" alt="" class="h-32 w-32 object-cover rounded mb-4">
         @endif
         <p><strong>Name:</strong> {{ $menuItem->name }}</p>
         <p><strong>Category:</strong> {{ $menuItem->category->name ?? '-' }}</p>

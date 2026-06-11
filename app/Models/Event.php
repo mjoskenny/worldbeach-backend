@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Event extends Model
 {
@@ -32,5 +33,16 @@ class Event extends Model
     public function ticketOrders()
     {
         return $this->hasMany(EventTicketOrder::class);
+    }
+
+    public function getDisplayImageUrlAttribute()
+    {
+        if (! $this->image) {
+            return null;
+        }
+
+        return Str::startsWith($this->image, ['http://', 'https://'])
+            ? $this->image
+            : asset('storage/' . ltrim($this->image, '/'));
     }
 }

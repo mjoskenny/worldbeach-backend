@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use App\Models\Gallery;
 use App\Support\UploadStorage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class GalleryController extends Controller
 {
@@ -29,13 +30,21 @@ class GalleryController extends Controller
         'image' => 'required|image',
     ]);
 
-    $path = UploadStorage::store($request->file('image'), 'gallery');
+    $publicId = 'gallery/' . Str::random(20);
+    $upload = cloudinary()->upload(
+        $request->file('image')->getRealPath(),
+        [
+            'public_id' => $publicId,
+            'resource_type' => 'image',
+            'overwrite' => true,
+        ]
+    );
 
     $position = Gallery::where('category', $request->category)->max('position') + 1;
 
     return Gallery::create([
         'category' => $request->category,
-        'image' => $path,
+        'image' => $upload->getSecurePath(),
         'title' => $request->title,
         'description' => $request->description,
         'date' => $request->date,
@@ -54,8 +63,21 @@ class GalleryController extends Controller
     ]);
 
     if ($request->hasFile('image')) {
-        UploadStorage::delete($gallery->getRawOriginal('image'));
-        $gallery->image = UploadStorage::store($request->file('image'), 'gallery');
+        if ($gallery->image && ! Str::startsWith($gallery->image, ['http://', 'https://'])) {
+            UploadStorage::delete($gallery->getRawOriginal('image'));
+        }
+
+        $publicId = 'gallery/' . Str::random(20);
+        $upload = cloudinary()->upload(
+            $request->file('image')->getRealPath(),
+            [
+                'public_id' => $publicId,
+                'resource_type' => 'image',
+                'overwrite' => true,
+            ]
+        );
+
+        $gallery->image = $upload->getSecurePath();
     }
 
     $gallery->category = $request->category;
@@ -72,7 +94,11 @@ class GalleryController extends Controller
     public function destroy($id)
     {
         $gallery = Gallery::findOrFail($id);
-        UploadStorage::delete($gallery->getRawOriginal('image'));
+
+        if ($gallery->image && ! Str::startsWith($gallery->image, ['http://', 'https://'])) {
+            UploadStorage::delete($gallery->getRawOriginal('image'));
+        }
+
         $gallery->delete();
         return response()->json(['success' => true]);
     }

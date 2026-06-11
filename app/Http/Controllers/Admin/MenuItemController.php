@@ -6,7 +6,8 @@ use App\Http\Controllers\Controller; // ✅ correct
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\MenuItem;
-use App\Support\UploadStorage;
+use Illuminate\Support\Facades\Log;
+use Exception;
 
 class MenuItemController extends Controller
 {
@@ -46,7 +47,20 @@ class MenuItemController extends Controller
 
         // Handle image upload
         if ($request->hasFile('image')) {
-            $data['image'] = UploadStorage::store($request->file('image'), 'menu_images');
+            try {
+                $uploadResult = cloudinary()->upload($request->file('image')->getRealPath(), [
+                    'folder' => 'menu_images',
+                ]);
+
+                $data['image_url'] = $uploadResult->getSecurePath();
+                $data['image_public_id'] = $uploadResult->getPublicId();
+                $data['image'] = null;
+
+                Log::info('MenuItem image uploaded to Cloudinary', ['public_id' => $data['image_public_id'], 'url' => $data['image_url']]);
+            } catch (Exception $e) {
+                Log::error('Cloudinary upload failed for MenuItem store', ['message' => $e->getMessage()]);
+                return redirect()->back()->withInput()->withErrors(['image' => 'Image upload failed. Please try again later.']);
+            }
         }
 
         MenuItem::create($data);
@@ -80,8 +94,29 @@ class MenuItemController extends Controller
         $data = $request->only(['name', 'description', 'price', 'variant_price', 'category_id']);
 
         if ($request->hasFile('image')) {
-            UploadStorage::delete($menuItem->getRawOriginal('image'));
-            $data['image'] = UploadStorage::store($request->file('image'), 'menu_images');
+            try {
+                if ($menuItem->image_public_id) {
+                    try {
+                        cloudinary()->admin()->deleteAssets($menuItem->image_public_id);
+                        Log::info('Deleted old MenuItem image from Cloudinary', ['public_id' => $menuItem->image_public_id]);
+                    } catch (Exception $ex) {
+                        Log::warning('Failed to delete old Cloudinary asset during MenuItem update', ['public_id' => $menuItem->image_public_id, 'error' => $ex->getMessage()]);
+                    }
+                }
+
+                $uploadResult = cloudinary()->upload($request->file('image')->getRealPath(), [
+                    'folder' => 'menu_images',
+                ]);
+
+                $data['image_url'] = $uploadResult->getSecurePath();
+                $data['image_public_id'] = $uploadResult->getPublicId();
+                $data['image'] = null;
+
+                Log::info('MenuItem image uploaded to Cloudinary (update)', ['public_id' => $data['image_public_id'], 'url' => $data['image_url']]);
+            } catch (Exception $e) {
+                Log::error('Cloudinary upload failed for MenuItem update', ['message' => $e->getMessage()]);
+                return redirect()->back()->withInput()->withErrors(['image' => 'Image upload failed. Please try again later.']);
+            }
         }
 
         $menuItem->update($data);
@@ -94,7 +129,18 @@ class MenuItemController extends Controller
      */
     public function destroy(MenuItem $menuItem)
     {
-        UploadStorage::delete($menuItem->getRawOriginal('image'));
+        if ($menuItem->image_public_id) {
+            try {
+                cloudinary()->admin()->deleteAssets($menuItem->image_public_id);
+                Log::info('Deleted MenuItem Cloudinary asset on destroy', ['public_id' => $menuItem->image_public_id]);
+            } catch (Exception $e) {
+                Log::warning('Failed to delete MenuItem Cloudinary asset on destroy', ['public_id' => $menuItem->image_public_id, 'error' => $e->getMessage()]);
+            }
+        }
+
+        if (! $menuItem->image_public_id && $menuItem->image) {
+            \App\Support\UploadStorage::delete($menuItem->getRawOriginal('image'));
+        }
         $menuItem->delete();
         return redirect()->route('admin.menu-items.index')->with('success', 'Menu item deleted successfully!');
     }

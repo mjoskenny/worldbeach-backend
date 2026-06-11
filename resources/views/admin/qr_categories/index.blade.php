@@ -30,7 +30,7 @@
 
                     <td class="py-2 px-4">
                         @if($category->image)
-                            <img src="{{ asset('storage/' . $category->image) }}" class="w-16 h-16 object-cover rounded">
+                            <img src="{{ $category->display_image_url }}" class="w-16 h-16 object-cover rounded">
                         @endif
                     </td>
 

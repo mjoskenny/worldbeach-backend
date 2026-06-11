@@ -15,6 +15,8 @@ class MenuItem extends Model
         'price',
         'variant_price',
         'image',
+        'image_url',
+        'image_public_id',
         'featured',
     ];
 
@@ -25,5 +27,31 @@ class MenuItem extends Model
     public function category()
     {
         return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    public function getDisplayImageUrlAttribute()
+    {
+        if ($this->image_url) {
+            return $this->image_url;
+        }
+
+        if ($this->image) {
+            return asset('storage/' . ltrim($this->image, '/'));
+        }
+
+        return null;
+    }
+
+    public function getImageAttribute($value)
+    {
+        if (! empty($this->attributes['image_url'])) {
+            return $this->attributes['image_url'];
+        }
+
+        if ($value) {
+            return asset('storage/' . ltrim($value, '/'));
+        }
+
+        return null;
     }
 }

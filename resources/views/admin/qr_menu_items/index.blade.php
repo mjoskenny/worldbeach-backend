@@ -44,7 +44,7 @@
                             <td class="py-3 px-4">
                                 @if($item->image)
                                     <img 
-                                        src="{{ asset('storage/' . $item->image) }}" 
+                                        src="{{ $item->display_image_url }}" 
                                         alt="{{ $item->name }}"
                                         class="w-16 h-16 object-cover rounded"
                                     >

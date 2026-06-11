@@ -57,6 +57,10 @@ services:
         sync: false
       - key: AWS_USE_PATH_STYLE_ENDPOINT
         value: "true"
+      - key: CLOUDINARY_URL
+        sync: false
+      - key: CLOUDINARY_UPLOAD_PRESET
+        sync: false
       - key: QUEUE_CONNECTION
         value: sync
       - key: SESSION_DRIVER

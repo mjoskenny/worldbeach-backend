@@ -43,9 +43,15 @@ class SpaceController extends Controller
             'image' => 'required|image|max:4096',
         ]);
 
-        // Store image
-        $filename = Str::random(20) . '.' . $request->file('image')->getClientOriginalExtension();
-        $imageUrl = UploadStorage::storeAs($request->file('image'), 'spaces', $filename);
+        $publicId = 'spaces/' . Str::random(20);
+        $upload = cloudinary()->upload(
+            $request->file('image')->getRealPath(),
+            [
+                'public_id' => $publicId,
+                'resource_type' => 'image',
+                'overwrite' => true,
+            ]
+        );
 
         $space = Space::create([
             'title' => $validated['title'],
@@ -55,7 +61,7 @@ class SpaceController extends Controller
             'size' => $validated['size'] ?? null,
             'price_per_hour' => $validated['price_per_hour'],
             'features' => $validated['features'] ?? [],
-            'image' => $imageUrl, // SINGLE STRING
+            'image' => $upload->getSecurePath(),
         ]);
 
         return response()->json($space, 201);
@@ -86,13 +92,22 @@ class SpaceController extends Controller
 
         // Handle image replacement
         if ($request->hasFile('image')) {
-            // Delete old image
-            if ($space->image) {
+            // Delete old image path only when the previous value was stored locally.
+            if ($space->image && ! Str::startsWith($space->image, ['http://', 'https://'])) {
                 UploadStorage::delete($space->getRawOriginal('image'));
             }
 
-            $filename = Str::random(20) . '.' . $request->file('image')->getClientOriginalExtension();
-            $space->image = UploadStorage::storeAs($request->file('image'), 'spaces', $filename);
+            $publicId = 'spaces/' . Str::random(20);
+            $upload = cloudinary()->upload(
+                $request->file('image')->getRealPath(),
+                [
+                    'public_id' => $publicId,
+                    'resource_type' => 'image',
+                    'overwrite' => true,
+                ]
+            );
+
+            $space->image = $upload->getSecurePath();
         }
 
         $space->update([

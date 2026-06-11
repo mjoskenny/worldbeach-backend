@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class SiteSetting extends Model
 {
@@ -27,4 +28,15 @@ class SiteSetting extends Model
         'twitter_url',
         'map_url',
     ];
+
+    public function getLogoUrlAttribute()
+    {
+        if (! $this->logo_path) {
+            return null;
+        }
+
+        return Str::startsWith($this->logo_path, ['http://', 'https://'])
+            ? $this->logo_path
+            : asset('storage/' . ltrim($this->logo_path, '/'));
+    }
 }

@@ -25,7 +25,7 @@
                 <tr class="border-b hover:bg-gray-50">
                     <td class="py-2 px-4">
                         @if($item->image)
-                            <img src="{{ asset('storage/' . $item->image) }}" alt="" class="h-16 w-16 object-cover rounded">
+                            <img src="{{ $item->display_image_url ?? $item->image }}" alt="" class="h-16 w-16 object-cover rounded">
                         @endif
                     </td>
                     <td class="py-2 px-4">{{ $item->name }}</td>

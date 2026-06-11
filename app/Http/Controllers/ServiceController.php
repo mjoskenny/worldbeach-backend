@@ -34,7 +34,17 @@ class ServiceController extends Controller
 
         // image
         if ($request->hasFile('image')) {
-            $data['image'] = UploadStorage::store($request->file('image'), 'services');
+            $publicId = 'services/' . Str::random(20);
+            $upload = cloudinary()->upload(
+                $request->file('image')->getRealPath(),
+                [
+                    'public_id' => $publicId,
+                    'resource_type' => 'image',
+                    'overwrite' => true,
+                ]
+            );
+
+            $data['image'] = $upload->getSecurePath();
         }
 
         return Service::create($data);
@@ -61,8 +71,21 @@ class ServiceController extends Controller
         $data['slug'] = Str::slug($data['name']);
 
         if ($request->hasFile('image')) {
-            UploadStorage::delete($service->getRawOriginal('image'));
-            $data['image'] = UploadStorage::store($request->file('image'), 'services');
+            if ($service->image && ! Str::startsWith($service->image, ['http://', 'https://'])) {
+                UploadStorage::delete($service->getRawOriginal('image'));
+            }
+
+            $publicId = 'services/' . Str::random(20);
+            $upload = cloudinary()->upload(
+                $request->file('image')->getRealPath(),
+                [
+                    'public_id' => $publicId,
+                    'resource_type' => 'image',
+                    'overwrite' => true,
+                ]
+            );
+
+            $data['image'] = $upload->getSecurePath();
         }
 
         $service->update($data);
@@ -73,7 +96,11 @@ class ServiceController extends Controller
     public function destroy($id)
     {
         $service = Service::findOrFail($id);
-        UploadStorage::delete($service->getRawOriginal('image'));
+
+        if ($service->image && ! Str::startsWith($service->image, ['http://', 'https://'])) {
+            UploadStorage::delete($service->getRawOriginal('image'));
+        }
+
         $service->delete();
         return response()->json(['success' => true]);
     }

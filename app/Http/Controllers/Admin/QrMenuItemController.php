@@ -7,6 +7,7 @@ use App\Models\QrMenuItem;
 use App\Models\QrCategory;
 use App\Support\UploadStorage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class QrMenuItemController extends Controller
 {
@@ -33,7 +34,17 @@ class QrMenuItemController extends Controller
             'position' => 'nullable|integer'
         ]);
 
-        $data['image'] = UploadStorage::store($request->file('image'), 'qr_menu_images');
+        $publicId = 'qr_menu_images/' . Str::random(20);
+        $upload = cloudinary()->upload(
+            $request->file('image')->getRealPath(),
+            [
+                'public_id' => $publicId,
+                'resource_type' => 'image',
+                'overwrite' => true,
+            ]
+        );
+
+        $data['image'] = $upload->getSecurePath();
 
         QrMenuItem::create($data);
 
@@ -59,8 +70,21 @@ class QrMenuItemController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            UploadStorage::delete($qr_menu_item->getRawOriginal('image'));
-            $data['image'] = UploadStorage::store($request->file('image'), 'qr_menu_images');
+            if ($qr_menu_item->image && ! Str::startsWith($qr_menu_item->image, ['http://', 'https://'])) {
+                UploadStorage::delete($qr_menu_item->getRawOriginal('image'));
+            }
+
+            $publicId = 'qr_menu_images/' . Str::random(20);
+            $upload = cloudinary()->upload(
+                $request->file('image')->getRealPath(),
+                [
+                    'public_id' => $publicId,
+                    'resource_type' => 'image',
+                    'overwrite' => true,
+                ]
+            );
+
+            $data['image'] = $upload->getSecurePath();
         }
 
         $qr_menu_item->update($data);
@@ -71,7 +95,10 @@ class QrMenuItemController extends Controller
 
     public function destroy(QrMenuItem $qr_menu_item)
     {
-        UploadStorage::delete($qr_menu_item->getRawOriginal('image'));
+        if ($qr_menu_item->image && ! Str::startsWith($qr_menu_item->image, ['http://', 'https://'])) {
+            UploadStorage::delete($qr_menu_item->getRawOriginal('image'));
+        }
+
         $qr_menu_item->delete();
         return back()->with('success', 'Deleted');
     }

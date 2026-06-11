@@ -30,7 +30,7 @@
             @if($qr_category->image)
                 <div class="mb-3">
                     <img 
-                        src="{{ asset('storage/' . $qr_category->image) }}" 
+                        src="{{ $qr_category->display_image_url }}" 
                         alt="{{ $qr_category->name }}"
                         class="w-32 h-32 object-cover rounded border"
                     >

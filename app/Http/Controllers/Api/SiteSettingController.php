@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SiteSetting;
 use App\Support\UploadStorage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class SiteSettingController extends Controller
 {
@@ -72,11 +73,21 @@ class SiteSettingController extends Controller
         $setting = $this->setting();
 
         if ($request->hasFile('logo')) {
-            if ($setting->logo_path) {
+            if ($setting->logo_path && ! Str::startsWith($setting->logo_path, ['http://', 'https://'])) {
                 UploadStorage::delete($setting->getRawOriginal('logo_path'));
             }
 
-            $validated['logo_path'] = UploadStorage::store($request->file('logo'), 'site-settings');
+            $publicId = 'site_settings/' . Str::random(20);
+            $upload = cloudinary()->upload(
+                $request->file('logo')->getRealPath(),
+                [
+                    'public_id' => $publicId,
+                    'resource_type' => 'image',
+                    'overwrite' => true,
+                ]
+            );
+
+            $validated['logo_path'] = $upload->getSecurePath();
         }
 
         $setting->update($validated);

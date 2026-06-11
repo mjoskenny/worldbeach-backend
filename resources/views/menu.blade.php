@@ -695,7 +695,7 @@ window.addEventListener('scroll', function() {
           'id' => $category->id,
           'name' => $category->name,
           'images' => $category->menuItems->map(function ($item) {
-              return $item->image ? '/storage/' . $item->image : asset('storage/menu_images/image_placeholder.png');
+          return $item->display_image_url ?? asset('storage/menu_images/image_placeholder.png');
           })->all(),
       ];
   })->all();

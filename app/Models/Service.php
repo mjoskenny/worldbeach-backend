@@ -2,6 +2,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Service extends Model
 {
@@ -23,6 +24,17 @@ class Service extends Model
         'features' => 'array',
         'available' => 'boolean',
     ];
+
+    public function getDisplayImageUrlAttribute()
+    {
+        if (! $this->image) {
+            return null;
+        }
+
+        return Str::startsWith($this->image, ['http://', 'https://'])
+            ? $this->image
+            : asset('storage/' . ltrim($this->image, '/'));
+    }
 }
 
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use App\Models\Event;
 use App\Support\UploadStorage;
 
@@ -48,7 +49,17 @@ public function show($id)
 
         // Image upload
         if ($request->hasFile('image')) {
-            $validated['image'] = UploadStorage::store($request->file('image'), 'events');
+            $publicId = 'events/' . Str::random(20);
+            $upload = cloudinary()->upload(
+                $request->file('image')->getRealPath(),
+                [
+                    'public_id' => $publicId,
+                    'resource_type' => 'image',
+                    'overwrite' => true,
+                ]
+            );
+
+            $validated['image'] = $upload->getSecurePath();
         }
 
         $validated['featured'] = $request->boolean('featured');
@@ -95,8 +106,21 @@ public function show($id)
 
         // Image update
         if ($request->hasFile('image')) {
-            UploadStorage::delete($event->getRawOriginal('image'));
-            $validated['image'] = UploadStorage::store($request->file('image'), 'events');
+            if ($event->image && ! Str::startsWith($event->image, ['http://', 'https://'])) {
+                UploadStorage::delete($event->getRawOriginal('image'));
+            }
+
+            $publicId = 'events/' . Str::random(20);
+            $upload = cloudinary()->upload(
+                $request->file('image')->getRealPath(),
+                [
+                    'public_id' => $publicId,
+                    'resource_type' => 'image',
+                    'overwrite' => true,
+                ]
+            );
+
+            $validated['image'] = $upload->getSecurePath();
         }
 
         $validated['featured'] = $request->boolean('featured');
@@ -128,7 +152,11 @@ public function show($id)
     public function destroy($id)
     {
         $event = Event::findOrFail($id);
-        UploadStorage::delete($event->getRawOriginal('image'));
+
+        if ($event->image && ! Str::startsWith($event->image, ['http://', 'https://'])) {
+            UploadStorage::delete($event->getRawOriginal('image'));
+        }
+
         $event->delete();
 
         return response()->json([

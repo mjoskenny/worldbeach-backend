@@ -28,7 +28,7 @@
         <label class="block mb-2 font-medium">Image</label>
         <input type="file" name="image" class="border rounded w-full p-2 mb-4">
         @if($menuItem->image)
-            <img src="{{ asset('storage/' . $menuItem->image) }}" alt="" class="h-20 w-20 object-cover mb-4 rounded">
+            <img src="{{ $menuItem->display_image_url ?? $menuItem->image }}" alt="" class="h-20 w-20 object-cover mb-4 rounded">
         @endif
 
         <label class="block mb-2 font-medium">Description</label>

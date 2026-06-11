@@ -74,7 +74,7 @@
             @if($qr_menu_item->image)
                 <div class="mb-3">
                     <img 
-                        src="{{ asset('storage/' . $qr_menu_item->image) }}" 
+                        src="{{ $qr_menu_item->display_image_url }}" 
                         alt="{{ $qr_menu_item->name }}"
                         class="w-32 h-32 object-cover rounded border"
                     >

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\QrCategory;
 use App\Support\UploadStorage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class QrCategoryController extends Controller
 {
@@ -29,7 +30,17 @@ class QrCategoryController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $data['image'] = UploadStorage::store($request->file('image'), 'qr_menu_images');
+            $publicId = 'qr_menu_images/' . Str::random(20);
+            $upload = cloudinary()->upload(
+                $request->file('image')->getRealPath(),
+                [
+                    'public_id' => $publicId,
+                    'resource_type' => 'image',
+                    'overwrite' => true,
+                ]
+            );
+
+            $data['image'] = $upload->getSecurePath();
         }
 
         QrCategory::create($data);
@@ -52,8 +63,21 @@ class QrCategoryController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            UploadStorage::delete($qr_category->getRawOriginal('image'));
-            $data['image'] = UploadStorage::store($request->file('image'), 'qr_menu_images');
+            if ($qr_category->image && ! Str::startsWith($qr_category->image, ['http://', 'https://'])) {
+                UploadStorage::delete($qr_category->getRawOriginal('image'));
+            }
+
+            $publicId = 'qr_menu_images/' . Str::random(20);
+            $upload = cloudinary()->upload(
+                $request->file('image')->getRealPath(),
+                [
+                    'public_id' => $publicId,
+                    'resource_type' => 'image',
+                    'overwrite' => true,
+                ]
+            );
+
+            $data['image'] = $upload->getSecurePath();
         }
 
         $qr_category->update($data);
@@ -64,7 +88,10 @@ class QrCategoryController extends Controller
 
     public function destroy(QrCategory $qr_category)
     {
-        UploadStorage::delete($qr_category->getRawOriginal('image'));
+        if ($qr_category->image && ! Str::startsWith($qr_category->image, ['http://', 'https://'])) {
+            UploadStorage::delete($qr_category->getRawOriginal('image'));
+        }
+
         $qr_category->delete();
         return back()->with('success', 'Deleted');
     }
