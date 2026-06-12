@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller; // ✅ correct
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\MenuItem;
+use App\Support\UploadStorage;
+use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
@@ -48,17 +50,9 @@ class MenuItemController extends Controller
         // Handle image upload
         if ($request->hasFile('image')) {
             try {
-                $uploadResult = cloudinary()->upload($request->file('image')->getRealPath(), [
-                    'folder' => 'menu_images',
-                ]);
-
-                $data['image_url'] = $uploadResult->getSecurePath();
-                $data['image_public_id'] = $uploadResult->getPublicId();
-                $data['image'] = null;
-
-                Log::info('MenuItem image uploaded to Cloudinary', ['public_id' => $data['image_public_id'], 'url' => $data['image_url']]);
+                $data = array_merge($data, $this->uploadMenuItemImage($request->file('image')));
             } catch (Exception $e) {
-                Log::error('Cloudinary upload failed for MenuItem store', ['message' => $e->getMessage()]);
+                Log::error('MenuItem image upload failed for store', ['message' => $e->getMessage()]);
                 return redirect()->back()->withInput()->withErrors(['image' => 'Image upload failed. Please try again later.']);
             }
         }
@@ -102,19 +96,13 @@ class MenuItemController extends Controller
                     } catch (Exception $ex) {
                         Log::warning('Failed to delete old Cloudinary asset during MenuItem update', ['public_id' => $menuItem->image_public_id, 'error' => $ex->getMessage()]);
                     }
+                } elseif ($menuItem->image) {
+                    UploadStorage::delete($menuItem->getRawOriginal('image'));
                 }
 
-                $uploadResult = cloudinary()->upload($request->file('image')->getRealPath(), [
-                    'folder' => 'menu_images',
-                ]);
-
-                $data['image_url'] = $uploadResult->getSecurePath();
-                $data['image_public_id'] = $uploadResult->getPublicId();
-                $data['image'] = null;
-
-                Log::info('MenuItem image uploaded to Cloudinary (update)', ['public_id' => $data['image_public_id'], 'url' => $data['image_url']]);
+                $data = array_merge($data, $this->uploadMenuItemImage($request->file('image')));
             } catch (Exception $e) {
-                Log::error('Cloudinary upload failed for MenuItem update', ['message' => $e->getMessage()]);
+                Log::error('MenuItem image upload failed for update', ['message' => $e->getMessage()]);
                 return redirect()->back()->withInput()->withErrors(['image' => 'Image upload failed. Please try again later.']);
             }
         }
@@ -143,5 +131,29 @@ class MenuItemController extends Controller
         }
         $menuItem->delete();
         return redirect()->route('admin.menu-items.index')->with('success', 'Menu item deleted successfully!');
+    }
+
+    private function uploadMenuItemImage(UploadedFile $file): array
+    {
+        if (! config('cloudinary.cloud_url')) {
+            $storedUrl = UploadStorage::store($file, 'menu_images');
+            Log::warning('Cloudinary is not configured; storing menu item image locally.', ['path' => $storedUrl]);
+
+            return [
+                'image_url' => $storedUrl,
+                'image_public_id' => null,
+                'image' => null,
+            ];
+        }
+
+        $uploadResult = cloudinary()->upload($file->getRealPath(), [
+            'folder' => 'menu_images',
+        ]);
+
+        return [
+            'image_url' => $uploadResult->getSecurePath(),
+            'image_public_id' => $uploadResult->getPublicId(),
+            'image' => null,
+        ];
     }
 }

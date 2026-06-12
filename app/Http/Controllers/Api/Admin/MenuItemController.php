@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\MenuItem;
+use App\Support\UploadStorage;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
@@ -27,17 +29,9 @@ class MenuItemController extends Controller
 
         if ($request->hasFile('image')) {
             try {
-                $uploadResult = cloudinary()->upload($request->file('image')->getRealPath(), [
-                    'folder' => 'menu_items',
-                ]);
-
-                $validated['image_url'] = $uploadResult->getSecurePath();
-                $validated['image_public_id'] = $uploadResult->getPublicId();
-                $validated['image'] = null;
-
-                Log::info('API: MenuItem image uploaded to Cloudinary', ['public_id' => $validated['image_public_id'] ?? null]);
+                $validated = array_merge($validated, $this->uploadMenuItemImage($request->file('image')));
             } catch (Exception $e) {
-                Log::error('API: Cloudinary upload failed for MenuItem store', ['message' => $e->getMessage()]);
+                Log::error('API: MenuItem image upload failed for store', ['message' => $e->getMessage()]);
                 return response()->json(['message' => 'Image upload failed'], 500);
             }
         }
@@ -66,30 +60,20 @@ class MenuItemController extends Controller
 
         if ($request->hasFile('image')) {
             try {
-                if ($item->image) {
-                    if ($item->image_public_id) {
-                        try {
-                            cloudinary()->admin()->deleteAssets($item->image_public_id);
-                            Log::info('API: Deleted old MenuItem image from Cloudinary', ['public_id' => $item->image_public_id]);
-                        } catch (Exception $ex) {
-                            Log::warning('API: Failed to delete old Cloudinary asset during MenuItem update', ['public_id' => $item->image_public_id, 'error' => $ex->getMessage()]);
-                        }
-                    } else {
-                        \App\Support\UploadStorage::delete($item->getRawOriginal('image'));
+                if ($item->image_public_id) {
+                    try {
+                        cloudinary()->admin()->deleteAssets($item->image_public_id);
+                        Log::info('API: Deleted old MenuItem image from Cloudinary', ['public_id' => $item->image_public_id]);
+                    } catch (Exception $ex) {
+                        Log::warning('API: Failed to delete old Cloudinary asset during MenuItem update', ['public_id' => $item->image_public_id, 'error' => $ex->getMessage()]);
                     }
+                } elseif ($item->image) {
+                    UploadStorage::delete($item->getRawOriginal('image'));
                 }
 
-                $uploadResult = cloudinary()->upload($request->file('image')->getRealPath(), [
-                    'folder' => 'menu_items',
-                ]);
-
-                $validated['image_url'] = $uploadResult->getSecurePath();
-                $validated['image_public_id'] = $uploadResult->getPublicId();
-                $validated['image'] = null;
-
-                Log::info('API: MenuItem image uploaded to Cloudinary (update)', ['public_id' => $validated['image_public_id'] ?? null]);
+                $validated = array_merge($validated, $this->uploadMenuItemImage($request->file('image')));
             } catch (Exception $e) {
-                Log::error('API: Cloudinary upload failed for MenuItem update', ['message' => $e->getMessage()]);
+                Log::error('API: MenuItem image upload failed for update', ['message' => $e->getMessage()]);
                 return response()->json(['message' => 'Image upload failed'], 500);
             }
         }
@@ -120,5 +104,29 @@ class MenuItemController extends Controller
         $item->delete();
 
         return response()->json(['message' => 'Deleted']);
+    }
+
+    private function uploadMenuItemImage(UploadedFile $file): array
+    {
+        if (! config('cloudinary.cloud_url')) {
+            $storedUrl = UploadStorage::store($file, 'menu_items');
+            Log::warning('Cloudinary is not configured; storing menu item image locally.', ['path' => $storedUrl]);
+
+            return [
+                'image_url' => $storedUrl,
+                'image_public_id' => null,
+                'image' => null,
+            ];
+        }
+
+        $uploadResult = cloudinary()->upload($file->getRealPath(), [
+            'folder' => 'menu_items',
+        ]);
+
+        return [
+            'image_url' => $uploadResult->getSecurePath(),
+            'image_public_id' => $uploadResult->getPublicId(),
+            'image' => null,
+        ];
     }
 }

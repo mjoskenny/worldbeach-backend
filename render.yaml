@@ -61,6 +61,8 @@ services:
         sync: false
       - key: CLOUDINARY_UPLOAD_PRESET
         sync: false
+      - key: CLOUDINARY_NOTIFICATION_URL
+        sync: false
       - key: QUEUE_CONNECTION
         value: sync
       - key: SESSION_DRIVER
