@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use App\Models\Gallery;
 use App\Support\UploadStorage;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
 class GalleryController extends Controller
@@ -30,21 +31,12 @@ class GalleryController extends Controller
         'image' => 'required|image',
     ]);
 
-    $publicId = 'gallery/' . Str::random(20);
-    $upload = cloudinary()->upload(
-        $request->file('image')->getRealPath(),
-        [
-            'public_id' => $publicId,
-            'resource_type' => 'image',
-            'overwrite' => true,
-        ]
-    );
-
+    $url = $this->uploadGalleryImage($request->file('image'));
     $position = Gallery::where('category', $request->category)->max('position') + 1;
 
     return Gallery::create([
         'category' => $request->category,
-        'image' => $upload->getSecurePath(),
+        'image' => $url,
         'title' => $request->title,
         'description' => $request->description,
         'date' => $request->date,
@@ -67,17 +59,7 @@ class GalleryController extends Controller
             UploadStorage::delete($gallery->getRawOriginal('image'));
         }
 
-        $publicId = 'gallery/' . Str::random(20);
-        $upload = cloudinary()->upload(
-            $request->file('image')->getRealPath(),
-            [
-                'public_id' => $publicId,
-                'resource_type' => 'image',
-                'overwrite' => true,
-            ]
-        );
-
-        $gallery->image = $upload->getSecurePath();
+        $gallery->image = $this->uploadGalleryImage($request->file('image'));
     }
 
     $gallery->category = $request->category;
@@ -87,6 +69,30 @@ class GalleryController extends Controller
     $gallery->save();
 
     return response()->json($gallery);
+}
+
+
+    private function uploadGalleryImage(UploadedFile $file): string
+{
+    if (env('CLOUDINARY_URL')) {
+        try {
+            $publicId = 'gallery/' . Str::random(20);
+            $upload = cloudinary()->upload(
+                $file->getRealPath(),
+                [
+                    'public_id' => $publicId,
+                    'resource_type' => 'image',
+                    'overwrite' => true,
+                ]
+            );
+
+            return $upload->getSecurePath();
+        } catch (\Throwable $e) {
+            // Fallback to local or configured disk storage.
+        }
+    }
+
+    return UploadStorage::store($file, 'gallery');
 }
 
 
