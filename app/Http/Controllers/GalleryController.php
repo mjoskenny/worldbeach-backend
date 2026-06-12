@@ -88,14 +88,13 @@ class GalleryController extends Controller
 
             return $upload->getSecurePath();
         } catch (\Throwable $e) {
-            // Fallback to local or configured disk storage.
+            // Fallback to public disk storage.
         }
     }
 
-    return UploadStorage::store($file, 'gallery');
-}
-
-
+        $disk = config('filesystems.default') === 's3' ? 'public' : config('filesystems.default');
+        return UploadStorage::storeAs($file, 'gallery', Str::random(32) . '.' . $file->getClientOriginalExtension(), $disk);
+    }
 
     public function destroy($id)
     {

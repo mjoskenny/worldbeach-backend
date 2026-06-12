@@ -16,9 +16,9 @@ class UploadStorage
         return self::url($disk, $path);
     }
 
-    public static function storeAs(UploadedFile $file, string $directory, string $filename): string
+    public static function storeAs(UploadedFile $file, string $directory, string $filename, ?string $forceDisk = null): string
     {
-        $disk = self::disk();
+        $disk = $forceDisk ?? self::disk();
         $path = $file->storeAs($directory, $filename, $disk);
 
         return self::url($disk, $path);
