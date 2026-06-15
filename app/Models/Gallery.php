@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Gallery extends Model
@@ -37,13 +36,13 @@ class Gallery extends Model
         $path = ltrim($this->image, '/');
 
         if (Str::startsWith($path, 'storage/')) {
-            $path = Str::after($path, 'storage/');
+            $path = ltrim(Str::after($path, 'storage/'), '/');
         }
 
         if (Str::startsWith($path, 'public/')) {
-            $path = Str::after($path, 'public/');
+            $path = ltrim(Str::after($path, 'public/'), '/');
         }
 
-        return Storage::disk(config('filesystems.default'))->url($path);
+        return asset('storage/' . $path);
     }
 }

@@ -35,8 +35,20 @@ class SiteSetting extends Model
             return null;
         }
 
-        return Str::startsWith($this->logo_path, ['http://', 'https://'])
-            ? $this->logo_path
-            : asset('storage/' . ltrim($this->logo_path, '/'));
+        if (Str::startsWith($this->logo_path, ['http://', 'https://'])) {
+            return $this->logo_path;
+        }
+
+        $path = ltrim($this->logo_path, '/');
+
+        if (Str::startsWith($path, 'storage/')) {
+            $path = ltrim(Str::after($path, 'storage/'), '/');
+        }
+
+        if (Str::startsWith($path, 'public/')) {
+            $path = ltrim(Str::after($path, 'public/'), '/');
+        }
+
+        return asset('storage/' . $path);
     }
 }

@@ -26,8 +26,20 @@ class QrCategory extends Model
             return null;
         }
 
-        return Str::startsWith($this->image, ['http://', 'https://'])
-            ? $this->image
-            : asset('storage/' . ltrim($this->image, '/'));
+        if (Str::startsWith($this->image, ['http://', 'https://'])) {
+            return $this->image;
+        }
+
+        $path = ltrim($this->image, '/');
+
+        if (Str::startsWith($path, 'storage/')) {
+            $path = ltrim(Str::after($path, 'storage/'), '/');
+        }
+
+        if (Str::startsWith($path, 'public/')) {
+            $path = ltrim(Str::after($path, 'public/'), '/');
+        }
+
+        return asset('storage/' . $path);
     }
 }

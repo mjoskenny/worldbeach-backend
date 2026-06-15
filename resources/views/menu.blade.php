@@ -556,7 +556,7 @@
             <article onclick="openCategoryGallery({{ $category->id }})"
               class="group cursor-pointer overflow-hidden rounded-[2rem] bg-white/90 dark:bg-slate-900/90 shadow-2xl transition hover:-translate-y-1 hover:shadow-2xl">
               <div class="relative h-72 overflow-hidden">
-                <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }} cover" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                <img src="{{ $category->display_image_url ?? asset('storage/menu_images/image_placeholder.png') }}" alt="{{ $category->name }} cover" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
                 <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/10 to-transparent"></div>
                 <div class="absolute inset-x-0 bottom-0 p-6">
                   <span class="inline-flex rounded-full bg-white/10  text-xs uppercase tracking-[0.2em] text-slate-100">Collection</span>

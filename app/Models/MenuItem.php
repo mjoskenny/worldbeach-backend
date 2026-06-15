@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class MenuItem extends Model
 {
@@ -35,11 +36,13 @@ class MenuItem extends Model
             return $this->image_url;
         }
 
-        if ($this->image) {
-            return asset('storage/' . ltrim($this->image, '/'));
+        if (! $this->image) {
+            return null;
         }
 
-        return null;
+        return Str::startsWith($this->image, ['http://', 'https://'])
+            ? $this->image
+            : asset('storage/' . ltrim($this->image, '/'));
     }
 
     public function getImageAttribute($value)
@@ -48,10 +51,12 @@ class MenuItem extends Model
             return $this->attributes['image_url'];
         }
 
-        if ($value) {
-            return asset('storage/' . ltrim($value, '/'));
+        if (! $value) {
+            return null;
         }
 
-        return null;
+        return Str::startsWith($value, ['http://', 'https://'])
+            ? $value
+            : asset('storage/' . ltrim($value, '/'));
     }
 }
