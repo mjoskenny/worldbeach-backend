@@ -73,24 +73,24 @@ class GalleryController extends Controller
 
 
     private function uploadGalleryImage(UploadedFile $file): string
-{
-    if (env('CLOUDINARY_URL')) {
-        try {
-            $publicId = 'gallery/' . Str::random(20);
-            $upload = cloudinary()->upload(
-                $file->getRealPath(),
-                [
-                    'public_id' => $publicId,
-                    'resource_type' => 'image',
-                    'overwrite' => true,
-                ]
-            );
+    {
+        if (config('cloudinary.cloud_url')) {
+            try {
+                $publicId = 'gallery/' . Str::random(20);
+                $upload = cloudinary()->upload(
+                    $file->getRealPath(),
+                    [
+                        'public_id' => $publicId,
+                        'resource_type' => 'image',
+                        'overwrite' => true,
+                    ]
+                );
 
-            return $upload->getSecurePath();
-        } catch (\Throwable $e) {
-            // Fallback to public disk storage.
+                return $upload->getSecurePath();
+            } catch (\Throwable $e) {
+                // Fallback to public disk storage.
+            }
         }
-    }
 
         $disk = config('filesystems.default') === 's3' ? 'public' : config('filesystems.default');
         return UploadStorage::storeAs($file, 'gallery', Str::random(32) . '.' . $file->getClientOriginalExtension(), $disk);
