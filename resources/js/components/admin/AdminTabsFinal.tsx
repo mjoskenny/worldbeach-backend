@@ -1098,10 +1098,8 @@ export const  GalleryTab: React.FC<{
           {qrCarouselImages.length > 0 ? (
             <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               {qrCarouselImages.map((image) => (
-                <button
+                <div
                   key={image.id}
-                  type="button"
-                  onClick={() => handleEdit(image)}
                   className="group relative aspect-video overflow-hidden rounded-lg bg-gray-100 dark:bg-white/5"
                 >
                   <img
@@ -1109,10 +1107,28 @@ export const  GalleryTab: React.FC<{
                     alt={image.title || "QR menu carousel image"}
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
                   />
+                  <div className="absolute top-2 right-2 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(image)}
+                      className="rounded-lg bg-[#00B4D8] p-2 text-white transition-colors hover:bg-[#0077B6]"
+                      title="Edit QR carousel image"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(image.id)}
+                      className="rounded-lg bg-red-500 p-2 text-white transition-colors hover:bg-red-600"
+                      title="Delete QR carousel image"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                   <span className="absolute inset-x-0 bottom-0 bg-black/60 px-2 py-1 text-left text-xs text-white">
                     {image.title || "QR Carousel"}
                   </span>
-                </button>
+                </div>
               ))}
             </div>
           ) : (
